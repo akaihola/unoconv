@@ -568,7 +568,7 @@ class Listener:
             error(2, "Warning: trying to launch %s." % bin)
             try:
                 os.execvp(bin, [bin, "-headless", "-nologo", "-nodefault", "-norestore", "-nofirststartwizard", "-accept=%s" % op.connection]);
-            except:
+            except Exception,e:
                 error(3, "Launch of %s failed.\n%s" % (bin, e))
                 continue
         else:
