@@ -18,40 +18,37 @@ import getopt, sys, os, glob, time
 
 global unopath
 
-try:
-    import uno, unohelper
-except ImportError:
-    ### The first thing we ought to do is find a suitable OpenOffice installation
-    ### with a compatible pyuno library that we can import.
-    extrapaths = glob.glob('/usr/lib*/openoffice*/program') + \
-                 glob.glob('/usr/lib*/ooo*/program') + \
-                 glob.glob('/opt/openoffice*/program') + \
-                 glob.glob('C:\\Program Files\\OpenOffice.org *\\program\\') + \
-                 [ '/Applications/NeoOffice.app/Contents/program', '/usr/bin' ]
-    for unopath in extrapaths:
-        if os.path.exists(os.path.join(unopath, "pyuno.so")):
-            filename = "pyuno.so"
-        elif os.path.exists(os.path.join(unopath, "pyuno.dll")):
-            filename = "pyuno.dll"
-        else:
-            continue
-        sys.path.append(unopath)
-        try:
-            import uno, unohelper
-            break
-        except ImportError, e:
-            sys.path.remove(unopath)
-            print >>sys.stderr, e
-            print >>sys.stderr, "WARNING: We found %s in %s, but could not import it." % (filename, unopath)
-            continue
+### The first thing we ought to do is find a suitable OpenOffice installation
+### with a compatible pyuno library that we can import.
+extrapaths = glob.glob('/usr/lib*/openoffice*/program') + \
+             glob.glob('/usr/lib*/ooo*/program') + \
+             glob.glob('/opt/openoffice*/program') + \
+             glob.glob('C:\\Program Files\\OpenOffice.org *\\program\\') + \
+             [ '/Applications/NeoOffice.app/Contents/program', '/usr/bin' ]
+for unopath in extrapaths:
+    if os.path.exists(os.path.join(unopath, "pyuno.so")):
+        filename = "pyuno.so"
+    elif os.path.exists(os.path.join(unopath, "pyuno.dll")):
+        filename = "pyuno.dll"
     else:
-        print >>sys.stderr, "unoconv: Cannot find the pyuno.so library in sys.path and known paths."
-        print >>sys.stderr, "ERROR: Please locate this library and send your feedback to: <tools@lists.rpmforge.net>."
-        sys.exit(1)
+        continue
+    sys.path.append(unopath)
+    try:
+        import uno, unohelper
+        break
+    except ImportError, e:
+        sys.path.remove(unopath)
+        print >>sys.stderr, e
+        print >>sys.stderr, "WARNING: We found %s in %s, but could not import it." % (filename, unopath)
+        continue
+else:
+    print >>sys.stderr, "unoconv: Cannot find the pyuno.so library in sys.path and known paths."
+    print >>sys.stderr, "ERROR: Please locate this library and send your feedback to: <tools@lists.rpmforge.net>."
+    sys.exit(1)
 
-    ### Export an environment that OpenOffice is pleased to work with
-    os.environ['LD_LIBRARY_PATH'] = '%s' % unopath
-    os.environ['PATH'] = '%s:' % unopath + os.environ['PATH']
+### Export an environment that OpenOffice is pleased to work with
+os.environ['LD_LIBRARY_PATH'] = '%s' % unopath
+os.environ['PATH'] = '%s:' % unopath + os.environ['PATH']
 
 ### Now that we have found a working pyuno library, let's import some classes
 from com.sun.star.beans import PropertyValue
