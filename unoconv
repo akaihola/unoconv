@@ -573,13 +573,23 @@ class Convertor:
             error(1, "Used doctype: %s" % outputfmt.doctype)
 
             ### Update document indexes
-            doc.refresh()
-            indexes = doc.getDocumentIndexes()
-            for i in range(0, indexes.getCount()):
-                index = indexes.getByIndex(i)
-                index.update()
+            try:
+                doc.refresh()
+                indexes = doc.getDocumentIndexes()
+            except AttributeError:
+                # the document doesn't implement the XRefreshable and/or
+                # XDocumentIndexesSupplier interfaces
+                pass
+            else:
+                for i in range(0, indexes.getCount()):
+                    index = indexes.getByIndex(i)
+                    index.update()
 
-            doc.updateLinks()
+            try:
+                doc.updateLinks()
+            except AttributeError:
+                # the document doesn't implement the XLinkUpdate interface
+                pass
 
 #            outputprops = doc.getOutProperties(outputfmt.filter, OutputStream())
 
