@@ -32,26 +32,30 @@ extrabinpaths = glob.glob('/usr/lib*/openoffice.org*/program')
 
 binaries = ( 'soffice.bin', 'soffice', )
 
-for oolibpath in extralibpaths:
-    if os.path.exists(os.path.join(oolibpath, "pyuno.so")):
-        filename = "pyuno.so"
-    elif os.path.exists(os.path.join(oolibpath, "pyuno.dll")):
-        filename = "pyuno.dll"
+try:
+    import uno, unohelper
+except ImportError:
+    for oolibpath in extralibpaths:
+        if os.path.exists(os.path.join(oolibpath, "pyuno.so")):
+            filename = "pyuno.so"
+        elif os.path.exists(os.path.join(oolibpath, "pyuno.dll")):
+            filename = "pyuno.dll"
+        else:
+            continue
+        try:
+            import uno, unohelper
+            sys.path.append(oolibpath)
+            os.environ['LD_LIBRARY_PATH'] = '%s' % oolibpath
+            break
+        except ImportError, e:
+            sys.path.remove(oolibpath)
+            print >>sys.stderr, e
+            print >>sys.stderr, "WARNING: We found %s in %s, but could not import it." % (filename, oolibpath)
+            continue
     else:
-        continue
-    try:
-        import uno, unohelper
-        sys.path.append(oolibpath)
-        break
-    except ImportError, e:
-        sys.path.remove(oolibpath)
-        print >>sys.stderr, e
-        print >>sys.stderr, "WARNING: We found %s in %s, but could not import it." % (filename, oolibpath)
-        continue
-else:
-    print >>sys.stderr, "unoconv: Cannot find the pyuno.so library in sys.path and known paths."
-    print >>sys.stderr, "ERROR: Please locate this library and send your feedback to: <tools@lists.rpmforge.net>."
-    sys.exit(1)
+        print >>sys.stderr, "unoconv: Cannot find the pyuno.so library in sys.path and known paths."
+        print >>sys.stderr, "ERROR: Please locate this library and send your feedback to: <tools@lists.rpmforge.net>."
+        sys.exit(1)
 
 oobin = None
 for oobinpath in extralibpaths + extrabinpaths:
@@ -69,7 +73,6 @@ else:
     sys.exit(1)
 
 ### Export an environment that OpenOffice is pleased to work with
-os.environ['LD_LIBRARY_PATH'] = '%s' % oolibpath
 os.environ['PATH'] = '%s:' % oobinpath + os.environ['PATH']
 
 ### Now that we have found a working pyuno library, let's import some classes
